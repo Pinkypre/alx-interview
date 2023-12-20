@@ -1,52 +1,39 @@
 #!/usr/bin/python3
 """
-This module contains a method that reads stdin line by line and
-computes metrics
+Log parsing
 """
-import dis
+
 import sys
 
-
-def display_metrics(total_size, status_code):
-    """
-    Function that print the metrics
-    """
-
-    print('File size: {}'.format(total_size))
-    for key, value in sorted(status_code.items()):
-        if value != 0:
-            print('{}: {}'.format(key, value))
-
-
 if __name__ == '__main__':
-    total_size = 0
-    status_code = {
-        '200': 0,
-        '301': 0,
-        '400': 0,
-        '401': 0,
-        '403': 0,
-        '404': 0,
-        '405': 0,
-        '500': 0
-    }
+
+    filesize, count = 0, 0
+    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
+    stats = {k: 0 for k in codes}
+
+    def print_stats(stats: dict, file_size: int) -> None:
+        print("File size: {:d}".format(filesize))
+        for k, v in sorted(stats.items()):
+            if v:
+                print("{}: {}".format(k, v))
 
     try:
-        i = 0
         for line in sys.stdin:
-            args = line.split()
-            if len(args) > 6:
-                status = args[-2]
-                file_size = args[-1]
-                total_size += int(file_size)
-                if status in status_code:
-                    i += 1
-                    status_code[status] += 1
-                    if i % 10 == 0:
-                        display_metrics(total_size, status_code)
-
+            count += 1
+            data = line.split()
+            try:
+                status_code = data[-2]
+                if status_code in stats:
+                    stats[status_code] += 1
+            except BaseException:
+                pass
+            try:
+                filesize += int(data[-1])
+            except BaseException:
+                pass
+            if count % 10 == 0:
+                print_stats(stats, filesize)
+        print_stats(stats, filesize)
     except KeyboardInterrupt:
-        display_metrics(total_size, status_code)
+        print_stats(stats, filesize)
         raise
-    else:
-        display_metrics(total_size, status_code)
